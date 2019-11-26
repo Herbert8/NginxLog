@@ -1,6 +1,7 @@
 package biz
 
 import (
+    "fmt"
     "github.com/360EntSecGroup-Skylar/excelize"
     "log"
     "strconv"
@@ -37,6 +38,22 @@ func (excelData *ExcelData) WriteAllData(mapObjList []map[string]string) {
     }
 }
 
+func (excelData *ExcelData) setCellValueEx(sheet, axis string, value interface{}) {
+
+    // 内容尝试转数字
+    val, err := strconv.ParseFloat(fmt.Sprintf("%v", value), 64)
+
+    // 转成功则按数字使用
+    if err == nil {
+      value = val
+    }
+
+    err = excelData.file.SetCellValue(sheetName, axis, value)
+    if err != nil {
+        log.Fatalln("Cell SetCellValue Error: ", err)
+    }
+}
+
 func (excelData *ExcelData) WriteData(mapObj map[string]string, objIndex int) {
 
     for sKey, sVal := range mapObj {
@@ -49,13 +66,9 @@ func (excelData *ExcelData) WriteData(mapObj map[string]string, objIndex int) {
                 log.Fatalln("Title SetCellValue Error: ", err)
             }
         }
-        cellName := rowColumnToCell(objIndex, columnIdx)
-        err := excelData.file.SetCellValue(sheetName, cellName, sVal)
-        if err != nil {
-            log.Fatalln("Cell SetCellValue Error: ", err)
-        }
+        cellAxis := rowColumnToCell(objIndex, columnIdx)
+        excelData.setCellValueEx(sheetName, cellAxis, sVal)
     }
-
 }
 
 func columnToTitleCell(columnIdx int) string {
